@@ -7,6 +7,12 @@ and flags any obvious anomalies.
 
 import pandas as pd
 from pathlib import Path
+from tabulate import tabulate
+
+
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", 200)
+pd.set_option("display.max_colwidth", 50)
 
 
 RAW_DIR = Path("/Users/priyanshukansara/Downloads/Bluestock_MF_Datasets/data/raw")
@@ -30,30 +36,32 @@ def load_and_inspect(name: str, filename: str) -> pd.DataFrame | None:
     """Load a single CSV and print a diagnostic summary."""
     filepath = Path(RAW_DIR) / filename
 
-    print(f"\n{'_' * 50}")
+    print(f"\n{'-' * 50}")
     print(f"  {name}  →  {filename}")
-    print(f"{'_' * 50}")
+    print(f"{'-' * 50}")
 
     if not filepath.exists():
-        print(f"  [WARNING] File not found: {filepath}")
-        print(f"  Place the CSV in:  data/raw/{filename}")
+        print(f" [WARNING] File not found: {filepath}")
+        print(f" Place the CSV in:  data/raw/{filename}")
         return None
 
     df = pd.read_csv(filepath)
 
-    # ── Basic info ────────────────────────────────────────────────────────
     print(f"\nShape : {df.shape[0]:,} rows  ×  {df.shape[1]} columns")
     print(f"\nColumn types:")
     for col, dtype in df.dtypes.items():
-        null_count = df[col].isna().sum()
-        null_flag  = f" ← {null_count} nulls" if null_count else ""
-        print(f"  {col:<35} {str(dtype):<12}{null_flag}")
+        print(f"  {col:<35} {str(dtype):<12}")
 
-    # ── Head ──────────────────────────────────────────────────────────────
+
     print(f"\nFirst 3 rows:")
-    print(df.head(3).to_string(index=False))
+    print(df.head(5))
 
-    # ── Anomaly checks ────────────────────────────────────────────────────
+
+    '''
+    check for anomalies : find irregularity in the data 
+    for example null values, duplicate rows, negative or zero values in numeric columns 
+    where it doesn't make sense (like NAV or amount_inr).
+    '''
     anomalies = []
 
     total_nulls = df.isna().sum().sum()
@@ -62,15 +70,13 @@ def load_and_inspect(name: str, filename: str) -> pd.DataFrame | None:
 
     dup_count = df.duplicated().sum()
     if dup_count:
-        anomalies.append(f"Duplicate rows   : {dup_count}")
+        anomalies.append(f"Duplicate rows : {dup_count}")
 
-    # NAV-specific check
     if "nav" in df.columns:
         bad_nav = (df["nav"] <= 0).sum()
         if bad_nav:
-            anomalies.append(f"NAV ≤ 0 rows     : {bad_nav}")
+            anomalies.append(f"NAV ≤ 0 rows   : {bad_nav}")
 
-    # Amount-specific check
     if "amount_inr" in df.columns:
         bad_amt = (df["amount_inr"] <= 0).sum()
         if bad_amt:
@@ -86,11 +92,10 @@ def load_and_inspect(name: str, filename: str) -> pd.DataFrame | None:
     return df
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print(f"\n{'*' * 65}")
-    print(f"  Bluestock Fintech — Data Ingestion (Day 1)")
-    print(f"  Loading from: {RAW_DIR}")
+    print(f" Bluestock Fintech — Data Ingestion (Day 1)")
+    print(f" Loading from: {RAW_DIR}")
     print(f"{'*' * 65}")
 
     dataframes: dict[str, pd.DataFrame] = {}
@@ -103,20 +108,19 @@ def main():
         else:
             missing.append(filename)
 
-    # ── Summary ───────────────────────────────────────────────────────────
-    print(f"\n\n{'#' * 65}")
-    print(f"  SUMMARY")
-    print(f"{'#' * 65}")
-    print(f"  Loaded successfully : {len(dataframes)} / {len(DATASETS)} datasets")
+    print(f"\n\n{'*' * 65}")
+    print(f"SUMMARY")
+    print(f"{'*' * 65}")
+    print(f" Loaded successfully : {len(dataframes)} / {len(DATASETS)} datasets")
     if missing:
-        print(f"\n  Missing files (place in data/raw/):")
+        print(f"\n Missing files (place in data/raw/):")
         for f in missing:
             print(f"    - {f}")
     else:
-        print(f"  All datasets present ✓")
+        print(f" All datasets present ✓")
 
     total_rows = sum(df.shape[0] for df in dataframes.values())
-    print(f"\n  Total rows across all datasets : {total_rows:,}")
+    print(f"\n Total rows across all datasets : {total_rows:,}")
 
 
 if __name__ == "__main__":
