@@ -1,0 +1,73 @@
+
+BLUESTOCK FINTECH — MUTUAL FUND ANALYTICS CAPSTONE
+Data Quality Report — Day 1
+Prepared by : Priyanshu Kansara
+Date        : June 2026
+
+
+DATASETS:
+
+1. 01_fund_master.csv
+2. 02_nav_history.csv
+
+
+----------------------------------------------------------------
+CHECK 1 — AMFI CODE CONSISTENCY
+----------------------------------------------------------------
+Method   : Pandas merge/join on amfi_code column
+Result   : PASS
+
+- Codes in fund_master missing from nav_history : 0
+- Extra codes in nav_history not in fund_master  : 0
+- All 40 AMFI codes are present in both datasets
+
+
+----------------------------------------------------------------
+CHECK 2 — NAV VALUES
+----------------------------------------------------------------
+- NAV <= 0 found : 0
+- All NAV values are positive
+Result   : PASS
+
+
+----------------------------------------------------------------
+CHECK 3 — AMFI API CODE VALIDATION (mfapi.in)
+----------------------------------------------------------------
+The scheme codes provided in the capstone documentation were
+tested against the live mfapi.in API. 5 out of 6 codes returned
+incorrect fund names.
+
+Code    Expected                  Actual                         Status
+------  ------------------------  ----------------------------  ---------
+125497  HDFC Top 100 Direct       SBI Small Cap Fund Direct      WRONG
+119551  SBI Bluechip Direct       Aditya Birla PSU Debt Fund     WRONG
+120503  ICICI Bluechip Direct     Axis ELSS Tax Saver Fund       WRONG
+118632  Nippon Large Cap Direct   Nippon India Large Cap Direct  CORRECT
+119092  Axis Bluechip Direct      HDFC Money Market Fund         WRONG
+120841  Kotak Bluechip Direct     Quant Mid Cap Fund Direct      WRONG
+
+Root Cause : SEBI's 2018 mutual fund recategorisation circular
+             caused AMCs to rename schemes. AMFI codes in the
+             documentation are outdated.
+
+Corrected codes verified and used:
+  119598 — SBI Large Cap Fund Direct Growth
+  120586 — ICICI Prudential Large Cap Fund Direct Growth
+  120465 — Axis Large Cap Fund Direct Growth
+  118632 — Nippon India Large Cap Fund Direct Growth
+  125497 — SBI Small Cap Fund Direct Growth (substitute)
+
+Note: Correct code for Kotak Large Cap Fund (formerly Kotak
+Bluechip) could not be confirmed via mfapi.in registry.
+Result   : FAIL (documentation codes) / PASS (corrected codes)
+
+
+----------------------------------------------------------------
+OVERALL SUMMARY
+----------------------------------------------------------------
+Check                          Result
+AMFI code consistency          PASS
+NAV value validity             PASS
+API scheme code accuracy       FAIL (docs outdated — corrected)
+
+Datasets are clean and ready for Day 2 processing.
