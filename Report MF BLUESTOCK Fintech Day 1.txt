@@ -1,0 +1,219 @@
+﻿Bluestock Fintech — Mutual Fund Analytics
+BLUESTOCK FINTECH PVT. LTD.
+Mutual Fund Analytics Capstone Project
+Day 1 — Project Setup & Data Ingestion
+Prepared by
+	Priyanshu Kansara
+	Internship
+	Data Analyst Intern — Bluestock Fintech Pvt. Ltd.
+	Date
+	June 2026
+	GitHub
+	github.com/Priyanshuk1405/Mutual_Fund_Analysis
+	Day Focus
+	Project Setup + Data Ingestion (ETL)
+	Time Spent
+	Approx. 6–8 hours
+	
+
+1. Overview
+Day 1 covered the foundational setup of the capstone project — environment configuration, folder structure, GitHub initialisation, dependency installation, and live NAV data ingestion from the mfapi.in public API. All 10 provided CSV datasets were also loaded and inspected.
+One significant issue was encountered during this process: the AMFI scheme codes provided in the capstone documentation did not match the actual schemes returned by the mfapi.in API. This is documented in detail in Section 4.
+
+
+2. Tasks Completed
+#
+	Task
+	Deliverable
+	1
+	Created project folder structure and initialised Git repo
+	GitHub repo with folder structure
+	2
+	Installed all Python dependencies and saved requirements.txt
+	requirements.txt
+	3
+	Loaded all 10 provided CSV datasets using Pandas
+	data_ingestion.py
+	4
+	Fetched live NAV from mfapi.in for HDFC Top 100 (code corrected)
+	live_nav_fetch.py
+	5
+	Fetched NAV for 5 schemes after correcting wrong codes
+	live_nav_history.csv
+	6
+	Explored fund master — fund houses, categories, sub-categories, risk grades
+	EDA.ipynb
+	7
+	Validated AMFI codes — all codes in fund_master exist in nav_history
+	EDA.ipynb
+	8
+	Git commit: Day 1: Data ingestion complete
+	GitHub updated
+	
+
+3. Environment Setup
+3.1 Folder Structure
+The following structure was created locally and pushed to the GitHub repository:
+Mutual_Fund_Analysis/
+├── data/raw/
+├── data/processed/
+├── data/db/
+├── notebooks/
+├── sql/
+├── dashboard/
+├── reports/
+
+
+3.2 Dependencies Installed
+Installed via pip and saved to requirements.txt:
+— pandas 2.2.2
+— numpy 1.26.4
+— matplotlib 3.8.4, seaborn 0.13.2, plotly 5.22.0
+— sqlalchemy 2.0.30
+— requests 2.32.3
+— scipy 1.13.1
+
+
+4. AMFI Scheme Code Issue
+The capstone documentation listed specific AMFI scheme codes for Task 4 and 5. When these codes were tested against the live mfapi.in API, most returned completely different fund names than expected. Only one code (118632 — Nippon India Large Cap Fund) was correct.
+
+
+4.1 Codes from Documentation vs Actual API Response
+Code
+	Expected (PDF)
+	Actual (mfapi.in)
+	Result
+	125497
+	HDFC Top 100 Direct
+	SBI Small Cap Fund Direct
+	Wrong
+	119551
+	SBI Bluechip Direct
+	Aditya Birla PSU Debt Fund
+	Wrong
+	120503
+	ICICI Bluechip Direct
+	Axis ELSS Tax Saver Fund
+	Wrong
+	118632
+	Nippon Large Cap Direct
+	Nippon India Large Cap Fund Direct
+	Correct
+	119092
+	Axis Bluechip Direct
+	HDFC Money Market Fund Direct
+	Wrong
+	120841
+	Kotak Bluechip Direct
+	Quant Mid Cap Fund Direct
+	Wrong
+	
+
+4.2 Root Cause
+After investigation, the reason for the mismatch is SEBI's mutual fund recategorisation circular from 2018, which required all AMCs to rename and restructure their schemes. As a result:
+— SBI Bluechip Fund was renamed to SBI Large Cap Fund
+— ICICI Prudential Bluechip Fund was renamed to ICICI Prudential Large Cap Fund
+— Axis Bluechip Fund was renamed to Axis Large Cap Fund
+— Kotak Bluechip Fund was renamed to Kotak Large Cap Fund
+— AMFI scheme codes were also reassigned in several cases during this process
+The mfapi.in API always reflects the current AMFI registry. The codes in the documentation were based on an older version of the registry and are now outdated.
+
+
+4.3 How It Was Fixed
+The mfapi.in search endpoint was used to look up schemes by name and find correct current codes. Each code was then verified by directly calling the API and checking the scheme name in the response. The corrected codes used are:
+Code
+	Scheme Name
+	Fund House
+	119598
+	SBI Large Cap Fund — Direct Plan — Growth
+	SBI Mutual Fund
+	120586
+	ICICI Prudential Large Cap Fund — Direct Plan — Growth
+	ICICI Prudential MF
+	120465
+	Axis Large Cap Fund — Direct Plan — Growth
+	Axis Mutual Fund
+	118632
+	Nippon India Large Cap Fund — Direct Plan — Growth
+	Nippon India MF
+	125497
+	SBI Small Cap Fund — Direct Plan — Growth (used as substitute)
+	SBI Mutual Fund
+	Note: The correct code for Kotak Bluechip / Kotak Large Cap Fund could not be confirmed through the mfapi.in registry. SBI Small Cap was used as a fifth scheme substitute.
+
+
+5. Fund Master Exploration 
+The 01_fund_master.csv file was loaded and explored in the EDA.ipynb notebook. The following unique values were found:
+
+
+Field
+	Unique Values
+	Fund Houses (10)
+	SBI MF, HDFC MF, ICICI Prudential MF, Nippon India MF, Kotak Mahindra MF, Axis MF, Aditya Birla Sun Life MF, UTI MF, Mirae Asset MF, DSP MF
+	Categories (2)
+	Equity, Debt
+	Sub-Categories (12)
+	Large Cap, Small Cap, Mid Cap, Flexi Cap, Large & Mid Cap, ELSS, Value, Index/ETF, Index, Gilt, Liquid, Short Duration
+	Risk Grades (5)
+	Low, Moderate, Moderately High, High, Very High
+	
+
+6. AMFI Code Validation 
+A cross-check was performed between amfi_code values in fund_master.csv and nav_history.csv using a Pandas merge/join operation.
+
+
+Check
+	Result
+	Codes in fund_master missing from nav_history
+	0 — None missing
+	Extra codes in nav_history not in fund_master
+	0 — No extras found
+	Overall result
+	PASS — All AMFI codes are consistent
+	
+
+7. Files Generated
+File
+	Location
+	Description
+	data_ingestion.py
+	scripts/
+	Loads and inspects all 10 CSVs
+	live_nav_fetch.py
+	scripts/
+	Fetches live NAV from mfapi.in
+	validate_amfi_codes.py
+	scripts/
+	Validates AMFI code consistency
+	live_nav_history.csv
+	data/raw/
+	Combined NAV data for 5 schemes
+	EDA.ipynb
+	notebooks/
+	Fund master exploration + validation
+	requirements.txt
+	root/
+	All Python dependencies
+	
+
+8. Key Observations
+— AMFI scheme codes should never be hardcoded — they must be verified at runtime against the live API
+— SEBI's 2018 recategorisation caused widespread renaming of mutual fund schemes across all AMCs
+— The /mf/{code}/latest endpoint is much faster than /mf/{code} for bulk code verification
+— All 40 AMFI codes in the provided fund_master.csv matched nav_history.csv with zero discrepancies
+— The mfapi.in API is reliable and returns well-structured JSON with both metadata and full NAV history
+
+
+9. Git Commit Log
+Commit Message
+	Description
+	Initial commit
+	GitHub repo created with README
+	Day 1: Project structure initialised
+	Folder structure, .gitignore, scripts pushed
+	Day 1: Data ingestion complete
+	All scripts, CSVs, and notebook committed
+	
+
+End of Day 1 Report
+Page
